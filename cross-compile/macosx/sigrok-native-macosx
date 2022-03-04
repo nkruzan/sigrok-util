@@ -88,7 +88,7 @@ cd ../..
 
 # libsigrok
 mkdir -p $PYPATH
-$GIT_CLONE $REPO_BASE/libsigrok
+$GIT_CLONE https://github.com/pico-coder/libsigrok.git
 cd libsigrok
 ./autogen.sh
 mkdir build
