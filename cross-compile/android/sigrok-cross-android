@@ -267,9 +267,11 @@ make $PARALLEL $V
 make install $V
 cd ..
 
+echo "---------------------PCRE------------------------"
 # pcre (needed for glib)
 #$WGET https://ftp.pcre.org/pub/pcre/pcre-$VER_PCRE.tar.gz
 $WGET https://github.com/nkruzan/pcre-v8.38/raw/a7e7105d9505f8efb46e2e155f7bd7301cebc315/pcre-8.38.tar.gz
+
 tar xfz pcre-$VER_PCRE.tar.gz
 cd pcre-$VER_PCRE
 ./configure $C --disable-cpp --enable-utf --enable-unicode-properties
@@ -277,6 +279,7 @@ make $PARALLEL $V
 make install $V
 cd ..
 
+echo "---------------------LIBFFI------------------------"
 # libffi (needed for glib)
 $WGET ftp://sourceware.org/pub/libffi/libffi-$VER_LIBFFI.tar.gz
 tar xfz libffi-$VER_LIBFFI.tar.gz
