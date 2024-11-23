@@ -101,7 +101,7 @@ if [ "x$1" = "xprepare" ]; then
   cd $ANDROID_PATH
 
   # NDK
-  $WGET http://dl.google.com/android/ndk/android-ndk-r$VER_NDK-linux-x86.bin
+  wget -c http://dl.google.com/android/ndk/android-ndk-r$VER_NDK-linux-x86.bin
   chmod +x android-ndk-r$VER_NDK-linux-x86.bin
   ./android-ndk-r$VER_NDK-linux-x86.bin -y
   cd android-ndk-r$VER_NDK
