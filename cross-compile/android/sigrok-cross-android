@@ -222,6 +222,7 @@ sed -i "s/^#math/math/g" Modules/Setup
 sed -i "s/^#time/time/g" Modules/Setup
 sed -i "s/^#_struct/_struct/g" Modules/Setup
 make PYTHON_FOR_BUILD='_PYTHON_HOST_PLATFORM=$(_PYTHON_HOST_PLATFORM) ./hostpython' install $V
+sed -i "s/^#include <sys\/soundcard.h/#include <linux\/soundcard.h/g" Modules/ossaudiodev.c 
 cd ..
 
 # libiconv (needed for glib)
