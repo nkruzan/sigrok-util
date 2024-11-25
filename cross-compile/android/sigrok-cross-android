@@ -104,7 +104,7 @@ if [ "x$1" = "xprepare" ]; then
   # NDK
   wget -c http://dl.google.com/android/ndk/android-ndk-r$VER_NDK-linux-x86_64.bin
   chmod 700 android-ndk-r$VER_NDK-linux-x86_64.bin
-  ./android-ndk-r$VER_NDK-linux-x86.bin -y
+  ./android-ndk-r$VER_NDK-linux-x86_64.bin -y
   cd android-ndk-r$VER_NDK
   ./build/tools/make-standalone-toolchain.sh --platform=android-$VER_AND_API \
     --toolchain=arm-linux-androideabi-4.9 \
