@@ -389,6 +389,7 @@ fi
 echo "libsigrok" | tee -a ./compile.status >/dev/null
 # libsigrok
 $GIT_CLONE $REPO_BASE/libsigrok
+sed -i "60i#undef BYTE_ORDER" libsigrok/src/input/isf.c
 cd libsigrok
 ./autogen.sh
 mkdir build
