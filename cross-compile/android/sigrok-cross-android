@@ -518,6 +518,7 @@ $GIT_CLONE $REPO_BASE/sigrok-androidutils
 cd sigrok-androidutils
 ./autogen.sh
 ./configure $C --with-android-sdk="${ANDROID_SDK}" --with-android-platform=android-$VER_AND_API
+export CMAKE_CXX_FLAGS="-std=c++11"
 make $PARALLEL $V
 make install $V
 cd ..
