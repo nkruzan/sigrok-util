@@ -76,6 +76,11 @@ VER_QT=5.6.0
 VER_QT_SHORT=5.6
 VER_SIGROK_FIRMWARE_FX2LAFW=0.1.6
 VER_NDK=10e
+
+# adjust as necessary
+#VER_NDK_ARCH=x86
+VER_NDK_ARCH=x86_64
+
 VER_SDK=24.4.1
 VER_AND_BT=23.0.2 # Android build tools version
 VER_AND_API=16    # Target Android API version
@@ -102,9 +107,9 @@ if [ "x$1" = "xprepare" ]; then
   cd $ANDROID_PATH
 
   # NDK
-  $WGET http://dl.google.com/android/ndk/android-ndk-r$VER_NDK-linux-x86.bin
-  chmod 700 android-ndk-r$VER_NDK-linux-x86.bin
-  ./android-ndk-r$VER_NDK-linux-x86.bin -y
+  wget -c http://dl.google.com/android/ndk/android-ndk-r$VER_NDK-linux-$VER_NDK_ARCH.bin
+  chmod 700 android-ndk-r$VER_NDK-linux-$VER_NDK_ARCH.bin
+  ./android-ndk-r$VER_NDK-linux-$VER_NDK_ARCH.bin -y
   cd android-ndk-r$VER_NDK
   ./build/tools/make-standalone-toolchain.sh --platform=android-$VER_AND_API \
     --toolchain=arm-linux-androideabi-4.9 \
@@ -517,6 +522,7 @@ $GIT_CLONE $REPO_BASE/sigrok-androidutils
 cd sigrok-androidutils
 ./autogen.sh
 ./configure $C --with-android-sdk="${ANDROID_SDK}" --with-android-platform=android-$VER_AND_API
+export CMAKE_CXX_FLAGS="-std=c++11"
 make $PARALLEL $V
 make install $V
 cd ..
