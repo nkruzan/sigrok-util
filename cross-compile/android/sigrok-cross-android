@@ -125,7 +125,7 @@ if [ "x$1" = "xprepare" ]; then
 fi
 
 # -----------------------------------------------------------------------------
-
+#if [ "x$1" = "xrestart" ]; then
 # Remove build directory contents (if any) and create a new build dir.
 rm -rf $BUILDDIR
 mkdir $BUILDDIR
@@ -510,6 +510,8 @@ make module-qtbase module-qtandroidextras module-qtsvg module-qtimageformats mod
 make install $V
 cd ..
 
+#fi
+#cd build
 echo "sigrok-androidutils" | tee -a ./compile.status >/dev/null
 # sigrok-androidutils
 $GIT_CLONE $REPO_BASE/sigrok-androidutils
