@@ -47,10 +47,10 @@ PREFIX=$HOME/sr_android
 BUILDDIR=./build
 
 # Edit this to control verbose build output.
-# V="V=1 VERBOSE=1"
+V="V=1 VERBOSE=1"
 
 # Edit this to enable/disable/modify parallel compiles.
-PARALLEL="-j 2"
+PARALLEL="-j 3"
 
 # You usually don't need to change anything below this line.
 
