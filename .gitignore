@@ -1,3 +1,7 @@
 build/
 firmware/kingst-la/*.bitstream
 firmware/kingst-la/*.fw
+
+cross-compile/android/INSTALL.LOG
+
+cross-compile/android/compile.status
