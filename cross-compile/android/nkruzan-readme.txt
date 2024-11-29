@@ -8,3 +8,17 @@ git checkout build-nov2024
 cd cross-compile/android
 ./sigrok-cross-android prepare
 ./sigrok-cross-android 
+
+pulseview 
+cmakelists.txt
+delete stuff to make it c++11
+
+
+
+android.toolchain.cmake line 193 add:
+set(PKG_CONFIG_EXECUTABLE "/usr/bin/pkg-config")
+
+
+exprtk.hpp
+comment line 1202
+comment line 1246
