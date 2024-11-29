@@ -1,5 +1,11 @@
 --- android.toolchain.cmake.orig	2014-04-06 16:08:25.765699476 +0200
 +++ android.toolchain.cmake	2014-04-06 16:22:30.671987319 +0200
+@@ -190,7 +190,7 @@
+ # ------------------------------------------------------------------------------
+ 
+ cmake_minimum_required( VERSION 2.6.3 )
++ set(PKG_CONFIG_EXECUTABLE "/usr/bin/pkg-config")
+
 @@ -464,7 +464,7 @@
   else()
    execute_process( COMMAND "${ANDROID_STANDALONE_TOOLCHAIN}/bin/${__availableToolchainMachines}-gcc${TOOL_OS_SUFFIX}" --version
