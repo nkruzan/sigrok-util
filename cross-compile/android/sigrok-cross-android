@@ -144,7 +144,8 @@ touch ./compile.status
 echo "Downloading Packages..." | tee -a ./compile.status >/dev/null
 git clone https://github.com/nkruzan/pulseview-android-required-packages build
 cd $BUILDDIR
-
+#hack for github file size
+cat qt-everywhere-opensource-src-5.6.0a? > qt-everywhere-opensource-src-5.6.0.tar.xz
 
 echo "Building Packages..." | tee -a ./compile.status >/dev/null
 echo "Python" | tee -a ./compile.status >/dev/null
