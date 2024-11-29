@@ -100,7 +100,10 @@ case "$TOOLCHAIN_TRIPLET" in
 esac
 
 # -----------------------------------------------------------------------------
-
+if [ "x$1" = "xcleanall" ]; then
+  rm -rf $ANDROID_PATH
+  exit
+fi
 # Get the Android NDK and SDK, install required packages and toolchains.
 if [ "x$1" = "xprepare" ]; then
   mkdir -p $ANDROID_PATH
