@@ -108,11 +108,21 @@ if [ "x$1" = "xcleanall" ]; then
 fi
 # Get the Android NDK and SDK, install required packages and toolchains.
 if [ "x$1" = "xprepare" ]; then
+  mkdir $BUILDDIR
+  git clone https://github.com/nkruzan/pulseview-android-required-packages build
+  cd $BUILDDIR
+  #hacks for github file size
+  cat qt-everywhere-opensource-src-5.6.0a? > qt-everywhere-opensource-src-5.6.0.tar.xz
+  cat android-ndk-r10e-linux-x86a? > android-ndk-r10e-linux-x86.bin
+  cat android-sdk_r24.4.1-linuxa? > android-sdk_r24.4.1-linux.tgz
+
   mkdir -p $ANDROID_PATH
+  mv android-ndk-r10e-linux-x86.bin $ANDROID_PATH/android-ndk-r10e-linux-x86.bin
+  mv android-sdk_r24.4.1-linux.tgz $ANDROID_PATH/android-sdk_r24.4.1-linux.tgz
   cd $ANDROID_PATH
 
   # NDK
-  wget -c http://dl.google.com/android/ndk/android-ndk-r$VER_NDK-linux-$VER_NDK_ARCH.bin
+#  wget -c http://dl.google.com/android/ndk/android-ndk-r$VER_NDK-linux-$VER_NDK_ARCH.bin
   chmod 700 android-ndk-r$VER_NDK-linux-$VER_NDK_ARCH.bin
   ./android-ndk-r$VER_NDK-linux-$VER_NDK_ARCH.bin -y
   cd android-ndk-r$VER_NDK
@@ -125,46 +135,40 @@ if [ "x$1" = "xprepare" ]; then
   cd ..
 
   # SDK
-  $WGET http://dl.google.com/android/android-sdk_r$VER_SDK-linux.tgz
+ # $WGET http://dl.google.com/android/android-sdk_r$VER_SDK-linux.tgz
   tar xfz android-sdk_r$VER_SDK-linux.tgz
   cd android-sdk-linux
   echo y | ./tools/android update sdk --no-ui --all --filter platform-tools,build-tools-$VER_AND_BT,android-$VER_AND_API
   cd ..
 
+
   exit
 fi
 
 # -----------------------------------------------------------------------------
-if [ "x$1" = "xrestart" ]; then
-  # Remove build directory contents (if any) and create a new build dir.
-  rm -rf $BUILDDIR
-  mkdir $BUILDDIR
-  echo "starting..."
-  touch ./compile.status
-  echo "Downloading Packages..." | tee -a ./compile.status >/dev/null
-  git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  cd $BUILDDIR
-  #hack for github file size
-  cat qt-everywhere-opensource-src-5.6.0a? > qt-everywhere-opensource-src-5.6.0.tar.xz
+# Remove build directory contents (if any) and create a new build dir.
+rm -rf $BUILDDIR
+mkdir $BUILDDIR
+echo "starting..."
+touch ./compile.status
+cd $BUILDDIR
 
-  echo "Building Packages..." | tee -a ./compile.status >/dev/null
-  echo "Python" | tee -a ./compile.status >/dev/null
+echo "Building Packages..." | tee -a ./compile.status >/dev/null
+echo "Python" | tee -a ./compile.status >/dev/null
 
-  # Build host Python before we start messing with the environment.
-  # Don't do parallel builds, this doesn't seem to work well.
-  #
-  #nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  #$WGET http://python.org/ftp/python/$VER_PYTHON/Python-$VER_PYTHON.tar.xz
+# Build host Python before we start messing with the environment.
+# Don't do parallel builds, this doesn't seem to work well.
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://python.org/ftp/python/$VER_PYTHON/Python-$VER_PYTHON.tar.xz
 
-  tar xfJ Python-$VER_PYTHON.tar.xz
-  cd Python-$VER_PYTHON
-  ./configure
-  make python $V
-  mv python hostpython
-  cd ..
-  echo "Python Complete." | tee -a ./compile.status >/dev/null
-fi
-
+tar xfJ Python-$VER_PYTHON.tar.xz
+cd Python-$VER_PYTHON
+./configure
+make python $V
+mv python hostpython
+cd ..
+echo "Python Complete." | tee -a ./compile.status >/dev/null
 # -----------------------------------------------------------------------------
 echo "Toolchain" | tee -a ./compile.status >/dev/null
 
@@ -225,305 +229,297 @@ fi
 
 echo "Toolchain Complete." | tee -a ./compile.status >/dev/null
 # -----------------------------------------------------------------------------
-if [ "x$1" = "xrestart" ]; then
 
-  echo "config.git" | tee -a ./compile.status >/dev/null
-  # Get the latest versions of config.guess/config.sub that know about Android.
-  $GIT_CLONE_DUMB_HTTP https://git.savannah.gnu.org/r/config.git
+echo "config.git" | tee -a ./compile.status >/dev/null
+# Get the latest versions of config.guess/config.sub that know about Android.
+$GIT_CLONE_DUMB_HTTP https://git.savannah.gnu.org/r/config.git
 
-  # Get a toolchain for cmake that knows about Android.
-  $WGET https://raw.githubusercontent.com/arithran/android-cmake/master/toolchain/android.toolchain.cmake
-  patch < ../android.toolchain.cmake.patch android.toolchain.cmake
+# Get a toolchain for cmake that knows about Android.
+$WGET https://raw.githubusercontent.com/arithran/android-cmake/master/toolchain/android.toolchain.cmake
+patch < ../android.toolchain.cmake.patch android.toolchain.cmake
 
-  echo "config.git Complete." | tee -a ./compile.status >/dev/null
-  # -----------------------------------------------------------------------------
+echo "config.git Complete." | tee -a ./compile.status >/dev/null
+# -----------------------------------------------------------------------------
 
-  echo "Patching Python" | tee -a ./compile.status >/dev/null
-  # Python (needed for libsigrokdecode)
-  # Don't do parallel Python builds, this doesn't seem to work well.
-  cd Python-$VER_PYTHON
-  make distclean $V
-  autoreconf
-  patch -p1 < ../../Python-$VER_PYTHON.patch
-  ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no ac_cv_func_pipe2=no ac_cv_func_fdatasync=no ac_cv_func_killpg=no ac_cv_func_waitid=no ac_cv_func_sigaltstack=no ./configure $C --build=x86_64-linux-gnu --disable-ipv6
-  sed -i "s/^#zlib/zlib/g" Modules/Setup
-  sed -i "s/^#math/math/g" Modules/Setup
-  sed -i "s/^#time/time/g" Modules/Setup
-  sed -i "s/^#_struct/_struct/g" Modules/Setup
-  sed -i "s/^#include <sys\/soundcard.h/#include <linux\/soundcard.h/g" Modules/ossaudiodev.c 
-  sed -i "s/^#include \"mpdecimal.h\"/#include \"libmpdec\/mpdecimal.h\"/g" Modules/_decimal/_decimal.c 
-  make PYTHON_FOR_BUILD='_PYTHON_HOST_PLATFORM=linux-arm ./hostpython' install $V
+echo "Patching Python" | tee -a ./compile.status >/dev/null
+# Python (needed for libsigrokdecode)
+# Don't do parallel Python builds, this doesn't seem to work well.
+cd Python-$VER_PYTHON
+make distclean $V
+autoreconf
+patch -p1 < ../../Python-$VER_PYTHON.patch
+ac_cv_file__dev_ptmx=no ac_cv_file__dev_ptc=no ac_cv_func_pipe2=no ac_cv_func_fdatasync=no ac_cv_func_killpg=no ac_cv_func_waitid=no ac_cv_func_sigaltstack=no ./configure $C --build=x86_64-linux-gnu --disable-ipv6
+sed -i "s/^#zlib/zlib/g" Modules/Setup
+sed -i "s/^#math/math/g" Modules/Setup
+sed -i "s/^#time/time/g" Modules/Setup
+sed -i "s/^#_struct/_struct/g" Modules/Setup
+sed -i "s/^#include <sys\/soundcard.h/#include <linux\/soundcard.h/g" Modules/ossaudiodev.c 
+sed -i "s/^#include \"mpdecimal.h\"/#include \"libmpdec\/mpdecimal.h\"/g" Modules/_decimal/_decimal.c 
+make PYTHON_FOR_BUILD='_PYTHON_HOST_PLATFORM=linux-arm ./hostpython' install $V
+cd ..
+
+echo "Patching Python Complete." | tee -a ./compile.status >/dev/null
+
+echo "libiconv" | tee -a ./compile.status >/dev/null
+# libiconv (needed for glib)
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$VER_LIBICONV.tar.gz
+tar xfz libiconv-$VER_LIBICONV.tar.gz
+cd libiconv-$VER_LIBICONV
+cp -f ../config/config.guess build-aux
+cp -f ../config/config.sub build-aux
+cp -f ../config/config.guess libcharset/build-aux
+cp -f ../config/config.sub libcharset/build-aux
+./configure $C --enable-shared
+make lib/localcharset.h $V
+cd libcharset
+make $PARALLEL $V
+make install $V
+cd ../lib
+make $PARALLEL $V
+make install $V
+cd ..
+test -d $PREFIX/include || mkdir $PREFIX/include
+cp include/iconv.h.inst $PREFIX/include/iconv.h
+cd ..
+echo "libiconv Complete." | tee -a ./compile.status >/dev/null
+
+echo "gettext" | tee -a ./compile.status >/dev/null
+# gettext (needed for glib)
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://ftp.gnu.org/pub/gnu/gettext/gettext-$VER_GETTEXT.tar.gz
+tar xfz gettext-$VER_GETTEXT.tar.gz
+cd gettext-$VER_GETTEXT
+./configure $C --enable-shared --disable-libasprintf
+cd gettext-runtime
+make $PARALLEL $V
+make install $V
+cd ../..
+
+echo "gettext Complete." | tee -a ./compile.status >/dev/null
+
+echo "zlib" | tee -a ./compile.status >/dev/null
+# zlib (needed for glib and libzip)
+$WGET http://zlib.net/zlib-$VER_ZLIB.tar.gz
+tar xfz zlib-$VER_ZLIB.tar.gz
+cd zlib-$VER_ZLIB
+# Note: zlib's configure doesn't understand --host, we need to pass $CC.
+CC="$TOOLCHAIN_TRIPLET-gcc $SYSROOT" ./configure --prefix=$PREFIX
+make $PARALLEL $V
+make install $V
+cd ..
+
+echo "zlib Complete." | tee -a ./compile.status >/dev/null
+
+echo "pcre" | tee -a ./compile.status >/dev/null
+# pcre (needed for glib)
+#$WGET https://ftp.pcre.org/pub/pcre/pcre-$VER_PCRE.tar.gz
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET https://github.com/nkruzan/pcre-v8.38/raw/a7e7105d9505f8efb46e2e155f7bd7301cebc315/pcre-8.38.tar.gz
+
+tar xfz pcre-$VER_PCRE.tar.gz
+cd pcre-$VER_PCRE
+./configure $C --disable-cpp --enable-utf --enable-unicode-properties
+make $PARALLEL $V
+make install $V
+cd ..
+
+
+echo "pcre Complete." | tee -a ./compile.status >/dev/null
+
+echo "libffi" | tee -a ./compile.status >/dev/null
+# libffi (needed for glib)
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET ftp://sourceware.org/pub/libffi/libffi-$VER_LIBFFI.tar.gz
+tar xfz libffi-$VER_LIBFFI.tar.gz
+cd libffi-$VER_LIBFFI
+./configure $C
+make $PARALLEL $V
+make install $V
+cd ..
+
+
+echo "libffi Complete." | tee -a ./compile.status >/dev/null
+
+echo "glib" | tee -a ./compile.status >/dev/null
+# glib (needed for libsigrok)
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://ftp.gnome.org/pub/gnome/sources/glib/$VER_GLIB_SHORT/glib-$VER_GLIB.tar.xz
+tar xfJ glib-$VER_GLIB.tar.xz
+cd glib-$VER_GLIB
+NOCONFIGURE=yes ./autogen.sh
+# Note: Manual LDFLAGS/CPPFLAGS needed for libiconv, rest uses pkg-config.
+LDFLAGS=-L$PREFIX/lib CPPFLAGS=-I$PREFIX/include glib_cv_stack_grows=no glib_cv_uscore=no ac_cv_func_posix_getpwuid_r=no ac_cv_func_posix_getgrgid_r=no ./configure --disable-compile-warnings $C
+make $PARALLEL $V
+make install $V
+cd ..
+
+echo "glib Complete." | tee -a ./compile.status >/dev/null
+
+
+echo "libzip" | tee -a ./compile.status >/dev/null
+# libzip (needed for libsigrok)
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://www.nih.at/libzip/libzip-$VER_LIBZIP.tar.gz
+tar xfz libzip-$VER_LIBZIP.tar.gz
+cd libzip-$VER_LIBZIP
+cp -f ../config/config.guess .
+cp -f ../config/config.sub .
+./configure $C
+make $PARALLEL $V
+make install $V
+cd ..
+
+
+echo "libzip Complete." | tee -a ./compile.status >/dev/null
+
+echo "libusb" | tee -a ./compile.status >/dev/null
+# libusb-1.0 (needed for libsigrok)
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://$SF_MIRROR/project/libusb/libusb-1.0/libusb-$VER_LIBUSB/libusb-$VER_LIBUSB.tar.bz2
+tar xfj libusb-$VER_LIBUSB.tar.bz2
+cd libusb-$VER_LIBUSB
+patch -p1 < ../../libusb-1.0.patch
+./configure $C --disable-udev
+make $PARALLEL $V
+make install $V
+cd ..
+
+echo "libusb Complete." | tee -a ./compile.status >/dev/null
+
+
+echo "libftdi1" | tee -a ./compile.status >/dev/null
+# libftdi1 (needed for libsigrok)
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://www.intra2net.com/en/developer/libftdi/download/libftdi1-$VER_LIBFTDI1.tar.bz2
+tar xfj libftdi1-$VER_LIBFTDI1.tar.bz2
+cd libftdi1-$VER_LIBFTDI1
+cmake $CM -DFTDIPP=no -DDOCUMENTATION=no -DEXAMPLES=no -DFTDI_EEPROM=no -DPYTHON_BINDINGS=no -DBUILD_TESTS=n .
+make $PARALLEL $V
+make install $V
+cd ..
+
+echo "libftdi1 Complete." | tee -a ./compile.status >/dev/null
+
+
+echo "libserialport" | tee -a ./compile.status >/dev/null
+# libserialport
+$GIT_CLONE $REPO_BASE/libserialport
+cd libserialport
+./autogen.sh
+mkdir build
+cd build
+../configure $C
+make $PARALLEL $V
+make install $V
+cd ../..
+
+
+echo "libserialport Complete." | tee -a ./compile.status >/dev/null
+
+# Build dependencies for libsigrok bindings if needed
+
+if [ x"$CPPFLAGS_STL" != x ]; then
+
+  echo "libsigc++" | tee -a ./compile.status >/dev/null
+  # libsigc++ (needed for glibmm)
+  $WGET http://ftp.gnome.org/pub/gnome/sources/libsigc++/$VER_LIBSIGCXX_SHORT/libsigc++-$VER_LIBSIGCXX.tar.xz
+  tar xfJ libsigc++-$VER_LIBSIGCXX.tar.xz
+  cd libsigc++-$VER_LIBSIGCXX
+  cp -f ../config/config.guess build
+  cp -f ../config/config.sub build
+  CPPFLAGS="$CPPFLAGS_STL" LDFLAGS="$LDFLAGS_STL -lgnustl_shared" ./configure --disable-documentation $C
+  make $PARALLEL $V
+  make install $V
   cd ..
 
-  echo "Patching Python Complete." | tee -a ./compile.status >/dev/null
+  echo "libsigc++ Complete." | tee -a ./compile.status >/dev/null
 
-  echo "libiconv" | tee -a ./compile.status >/dev/null
-  # libiconv (needed for glib)
-  #
-  #nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  #$WGET http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$VER_LIBICONV.tar.gz
-  tar xfz libiconv-$VER_LIBICONV.tar.gz
-  cd libiconv-$VER_LIBICONV
-  cp -f ../config/config.guess build-aux
-  cp -f ../config/config.sub build-aux
-  cp -f ../config/config.guess libcharset/build-aux
-  cp -f ../config/config.sub libcharset/build-aux
-  ./configure $C --enable-shared
-  make lib/localcharset.h $V
-  cd libcharset
-  make $PARALLEL $V
-  make install $V
-  cd ../lib
+  echo "glibmm" | tee -a ./compile.status >/dev/null
+  # glibmm (needed for libsigrok bindings)
+  $WGET http://ftp.gnome.org/pub/gnome/sources/glibmm/$VER_GLIBMM_SHORT/glibmm-$VER_GLIBMM.tar.xz
+  tar xfJ glibmm-$VER_GLIBMM.tar.xz
+  cd glibmm-$VER_GLIBMM
+  CPPFLAGS="$CPPFLAGS_STL" LDFLAGS="$LDFLAGS_STL -lgnustl_shared" ./configure --disable-documentation $C
   make $PARALLEL $V
   make install $V
   cd ..
-  test -d $PREFIX/include || mkdir $PREFIX/include
-  cp include/iconv.h.inst $PREFIX/include/iconv.h
-  cd ..
-  echo "libiconv Complete." | tee -a ./compile.status >/dev/null
-
-  echo "gettext" | tee -a ./compile.status >/dev/null
-  # gettext (needed for glib)
-  #
-  #nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  #$WGET http://ftp.gnu.org/pub/gnu/gettext/gettext-$VER_GETTEXT.tar.gz
-  tar xfz gettext-$VER_GETTEXT.tar.gz
-  cd gettext-$VER_GETTEXT
-  ./configure $C --enable-shared --disable-libasprintf
-  cd gettext-runtime
-  make $PARALLEL $V
-  make install $V
-  cd ../..
-
-  echo "gettext Complete." | tee -a ./compile.status >/dev/null
-
-  echo "zlib" | tee -a ./compile.status >/dev/null
-  # zlib (needed for glib and libzip)
-  $WGET http://zlib.net/zlib-$VER_ZLIB.tar.gz
-  tar xfz zlib-$VER_ZLIB.tar.gz
-  cd zlib-$VER_ZLIB
-  # Note: zlib's configure doesn't understand --host, we need to pass $CC.
-  CC="$TOOLCHAIN_TRIPLET-gcc $SYSROOT" ./configure --prefix=$PREFIX
-  make $PARALLEL $V
-  make install $V
-  cd ..
-
-  echo "zlib Complete." | tee -a ./compile.status >/dev/null
-
-  echo "pcre" | tee -a ./compile.status >/dev/null
-  # pcre (needed for glib)
-  #$WGET https://ftp.pcre.org/pub/pcre/pcre-$VER_PCRE.tar.gz
-  #
-  #nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  #$WGET https://github.com/nkruzan/pcre-v8.38/raw/a7e7105d9505f8efb46e2e155f7bd7301cebc315/pcre-8.38.tar.gz
-
-  tar xfz pcre-$VER_PCRE.tar.gz
-  cd pcre-$VER_PCRE
-  ./configure $C --disable-cpp --enable-utf --enable-unicode-properties
-  make $PARALLEL $V
-  make install $V
-  cd ..
-
-
-  echo "pcre Complete." | tee -a ./compile.status >/dev/null
-
-  echo "libffi" | tee -a ./compile.status >/dev/null
-  # libffi (needed for glib)
-  #
-  #nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  #$WGET ftp://sourceware.org/pub/libffi/libffi-$VER_LIBFFI.tar.gz
-  tar xfz libffi-$VER_LIBFFI.tar.gz
-  cd libffi-$VER_LIBFFI
-  ./configure $C
-  make $PARALLEL $V
-  make install $V
-  cd ..
-
-
-  echo "libffi Complete." | tee -a ./compile.status >/dev/null
-
-  echo "glib" | tee -a ./compile.status >/dev/null
-  # glib (needed for libsigrok)
-  #
-  #nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  #$WGET http://ftp.gnome.org/pub/gnome/sources/glib/$VER_GLIB_SHORT/glib-$VER_GLIB.tar.xz
-  tar xfJ glib-$VER_GLIB.tar.xz
-  cd glib-$VER_GLIB
-  NOCONFIGURE=yes ./autogen.sh
-  # Note: Manual LDFLAGS/CPPFLAGS needed for libiconv, rest uses pkg-config.
-  LDFLAGS=-L$PREFIX/lib CPPFLAGS=-I$PREFIX/include glib_cv_stack_grows=no glib_cv_uscore=no ac_cv_func_posix_getpwuid_r=no ac_cv_func_posix_getgrgid_r=no ./configure --disable-compile-warnings $C
-  make $PARALLEL $V
-  make install $V
-  cd ..
-
-  echo "glib Complete." | tee -a ./compile.status >/dev/null
-
-
-  echo "libzip" | tee -a ./compile.status >/dev/null
-  # libzip (needed for libsigrok)
-  #
-  #nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  #$WGET http://www.nih.at/libzip/libzip-$VER_LIBZIP.tar.gz
-  tar xfz libzip-$VER_LIBZIP.tar.gz
-  cd libzip-$VER_LIBZIP
-  cp -f ../config/config.guess .
-  cp -f ../config/config.sub .
-  ./configure $C
-  make $PARALLEL $V
-  make install $V
-  cd ..
-
-
-  echo "libzip Complete." | tee -a ./compile.status >/dev/null
-
-  echo "libusb" | tee -a ./compile.status >/dev/null
-  # libusb-1.0 (needed for libsigrok)
-  #
-  #nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  #$WGET http://$SF_MIRROR/project/libusb/libusb-1.0/libusb-$VER_LIBUSB/libusb-$VER_LIBUSB.tar.bz2
-  tar xfj libusb-$VER_LIBUSB.tar.bz2
-  cd libusb-$VER_LIBUSB
-  patch -p1 < ../../libusb-1.0.patch
-  ./configure $C --disable-udev
-  make $PARALLEL $V
-  make install $V
-  cd ..
-
-  echo "libusb Complete." | tee -a ./compile.status >/dev/null
-
-
-  echo "libftdi1" | tee -a ./compile.status >/dev/null
-  # libftdi1 (needed for libsigrok)
-  #
-  #nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  #$WGET http://www.intra2net.com/en/developer/libftdi/download/libftdi1-$VER_LIBFTDI1.tar.bz2
-  tar xfj libftdi1-$VER_LIBFTDI1.tar.bz2
-  cd libftdi1-$VER_LIBFTDI1
-  cmake $CM -DFTDIPP=no -DDOCUMENTATION=no -DEXAMPLES=no -DFTDI_EEPROM=no -DPYTHON_BINDINGS=no -DBUILD_TESTS=n .
-  make $PARALLEL $V
-  make install $V
-  cd ..
-
-  echo "libftdi1 Complete." | tee -a ./compile.status >/dev/null
-
-
-  echo "libserialport" | tee -a ./compile.status >/dev/null
-  # libserialport
-  $GIT_CLONE $REPO_BASE/libserialport
-  cd libserialport
-  ./autogen.sh
-  mkdir build
-  cd build
-  ../configure $C
-  make $PARALLEL $V
-  make install $V
-  cd ../..
-
-
-  echo "libserialport Complete." | tee -a ./compile.status >/dev/null
-
-  # Build dependencies for libsigrok bindings if needed
-
-  if [ x"$CPPFLAGS_STL" != x ]; then
-
-    echo "libsigc++" | tee -a ./compile.status >/dev/null
-    # libsigc++ (needed for glibmm)
-    $WGET http://ftp.gnome.org/pub/gnome/sources/libsigc++/$VER_LIBSIGCXX_SHORT/libsigc++-$VER_LIBSIGCXX.tar.xz
-    tar xfJ libsigc++-$VER_LIBSIGCXX.tar.xz
-    cd libsigc++-$VER_LIBSIGCXX
-    cp -f ../config/config.guess build
-    cp -f ../config/config.sub build
-    CPPFLAGS="$CPPFLAGS_STL" LDFLAGS="$LDFLAGS_STL -lgnustl_shared" ./configure --disable-documentation $C
-    make $PARALLEL $V
-    make install $V
-    cd ..
-
-    echo "libsigc++ Complete." | tee -a ./compile.status >/dev/null
-
-    echo "glibmm" | tee -a ./compile.status >/dev/null
-    # glibmm (needed for libsigrok bindings)
-    $WGET http://ftp.gnome.org/pub/gnome/sources/glibmm/$VER_GLIBMM_SHORT/glibmm-$VER_GLIBMM.tar.xz
-    tar xfJ glibmm-$VER_GLIBMM.tar.xz
-    cd glibmm-$VER_GLIBMM
-    CPPFLAGS="$CPPFLAGS_STL" LDFLAGS="$LDFLAGS_STL -lgnustl_shared" ./configure --disable-documentation $C
-    make $PARALLEL $V
-    make install $V
-    cd ..
-    echo "glibmm Complete." | tee -a ./compile.status >/dev/null
-  fi
+  echo "glibmm Complete." | tee -a ./compile.status >/dev/null
+fi
 
 #fi
-  echo "libsigrok" | tee -a ./compile.status >/dev/null
-  # libsigrok
-  $GIT_CLONE $REPO_BASE/libsigrok
-  sed -i "60i#undef BYTE_ORDER" libsigrok/src/input/isf.c
-  cd libsigrok
-  ./autogen.sh
-  mkdir build
-  cd build
-  CPPFLAGS="$CPPFLAGS_STL" LDFLAGS="$LDFLAGS_STL" JAVAC="javac -source 1.6 -target 1.6" ../configure $C $BINDINGS_CONFIG --datadir=/sdcard
-  make $PARALLEL $V
-  make datadir='$(datarootdir)' install $V
-  cd ../..
-#if [ "x$1" = "xrestart" ]; then
-  echo "libsigrok Complete." | tee -a ./compile.status >/dev/null
+echo "libsigrok" | tee -a ./compile.status >/dev/null
+# libsigrok
+$GIT_CLONE $REPO_BASE/libsigrok
+sed -i "60i#undef BYTE_ORDER" libsigrok/src/input/isf.c
+cd libsigrok
+./autogen.sh
+mkdir build
+cd build
+CPPFLAGS="$CPPFLAGS_STL" LDFLAGS="$LDFLAGS_STL" JAVAC="javac -source 1.6 -target 1.6" ../configure $C $BINDINGS_CONFIG --datadir=/sdcard
+make $PARALLEL $V
+make datadir='$(datarootdir)' install $V
+cd ../..
+echo "libsigrok Complete." | tee -a ./compile.status >/dev/null
 
-fi
 
-if [ "x$1" = "xrestart" ]; then
+echo "libsigrokdecode" | tee -a ./compile.status >/dev/null
+# libsigrokdecode
+$GIT_CLONE $REPO_BASE/libsigrokdecode
+cd libsigrokdecode
+./autogen.sh
+mkdir build
+cd build
+../configure $C
+make $PARALLEL $V
+make install $V
+cd ../..
+echo "libsigrokdecode Complete." | tee -a ./compile.status >/dev/null
 
-  echo "libsigrokdecode" | tee -a ./compile.status >/dev/null
-  # libsigrokdecode
-  $GIT_CLONE $REPO_BASE/libsigrokdecode
-  cd libsigrokdecode
-  ./autogen.sh
-  mkdir build
-  cd build
-  ../configure $C
-  make $PARALLEL $V
-  make install $V
-  cd ../..
-  echo "libsigrokdecode Complete." | tee -a ./compile.status >/dev/null
+echo "sigrok-firmware" | tee -a ./compile.status >/dev/null
+# sigrok-firmware
+$GIT_CLONE $REPO_BASE/sigrok-firmware
+cd sigrok-firmware
+./autogen.sh
+mkdir build
+cd build
+../configure $C
+make $PARALLEL $V
+make install $V
+cd ../..
+echo "sigrok-firmware Complete." | tee -a ./compile.status >/dev/null
 
-  echo "sigrok-firmware" | tee -a ./compile.status >/dev/null
-  # sigrok-firmware
-  $GIT_CLONE $REPO_BASE/sigrok-firmware
-  cd sigrok-firmware
-  ./autogen.sh
-  mkdir build
-  cd build
-  ../configure $C
-  make $PARALLEL $V
-  make install $V
-  cd ../..
+echo "sigrok-firmware-fx2lafw" | tee -a ./compile.status >/dev/null
+# sigrok-firmware-fx2lafw
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://sigrok.org/download/binary/sigrok-firmware-fx2lafw/sigrok-firmware-fx2lafw-bin-$VER_SIGROK_FIRMWARE_FX2LAFW.tar.gz
+tar xfz sigrok-firmware-fx2lafw-bin-$VER_SIGROK_FIRMWARE_FX2LAFW.tar.gz
+cd sigrok-firmware-fx2lafw-bin-$VER_SIGROK_FIRMWARE_FX2LAFW
+cp *.fw $PREFIX/share/sigrok-firmware/
+cd ..
+echo "sigrok-firmware-fx2lafw Complete." | tee -a ./compile.status >/dev/null
 
-  echo "sigrok-firmware Complete." | tee -a ./compile.status >/dev/null
-
-  echo "sigrok-firmware-fx2lafw" | tee -a ./compile.status >/dev/null
-  # sigrok-firmware-fx2lafw
-  #
-  #nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  #$WGET http://sigrok.org/download/binary/sigrok-firmware-fx2lafw/sigrok-firmware-fx2lafw-bin-$VER_SIGROK_FIRMWARE_FX2LAFW.tar.gz
-  tar xfz sigrok-firmware-fx2lafw-bin-$VER_SIGROK_FIRMWARE_FX2LAFW.tar.gz
-  cd sigrok-firmware-fx2lafw-bin-$VER_SIGROK_FIRMWARE_FX2LAFW
-  cp *.fw $PREFIX/share/sigrok-firmware/
-  cd ..
-  echo "sigrok-firmware-fx2lafw Complete." | tee -a ./compile.status >/dev/null
-
-  echo "sigrok-cli" | tee -a ./compile.status >/dev/null
-  # sigrok-cli
-  $GIT_CLONE $REPO_BASE/sigrok-cli
-  cd sigrok-cli
-  ./autogen.sh
-  mkdir build
-  cd build
-  ../configure $C
-  make $PARALLEL $V
-  make install $V
-  cd ../..
-  echo "sigrok-cli Complete." | tee -a ./compile.status >/dev/null
-fi
-
+echo "sigrok-cli" | tee -a ./compile.status >/dev/null
+# sigrok-cli
+$GIT_CLONE $REPO_BASE/sigrok-cli
+cd sigrok-cli
+./autogen.sh
+mkdir build
+cd build
+../configure $C
+make $PARALLEL $V
+make install $V
+cd ../..
+echo "sigrok-cli Complete." | tee -a ./compile.status >/dev/null
 # -----------------------------------------------------------------------------
 # Check if we have all requirements to build PulseView:
 
@@ -548,94 +544,88 @@ fi
 NDK_HOST=`"$ANDROID_NDK/ndk-build" -p 2>/dev/null | awk '$1 == "HOST_TAG" { print $3 }'`
 
 # -----------------------------------------------------------------------------
-if [ "x$1" = "xrestart" ]; then
-  echo "Boost" | tee -a ./compile.status >/dev/null
-  # Boost (needed for PulseView)
-  #
-  #nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  #$WGET http://$SF_MIRROR/project/boost/boost/$VER_BOOST/boost_${VER_BOOST//./_}.tar.bz2
-  tar xfj boost_${VER_BOOST//./_}.tar.bz2
-  cd boost_${VER_BOOST//./_}
-  patch -p0 < ../../boost_wchar.patch
-  CC= ./bootstrap.sh --with-toolset=gcc --with-libraries=filesystem,system,serialization,test --without-icu
-  echo "using gcc : $NDK_TOOLCHAIN_VERSION : \"${TOOLCHAIN_TRIPLET}-g++\" : <cxxflags>\"$SYSROOT -I$PREFIX/include $CPPFLAGS_STL\" <linkflags>\"$SYSROOT -L$PREFIX/lib $LDFLAGS_STL -lgnustl_shared\" ;" > user-config.jam
-  ./b2 -q -d+2 --ignore-site-config --user-config=user-config.jam toolset=gcc variant=release link=shared threading=multi runtime-link=shared target-os=android --prefix=$PREFIX --layout=system install $PARALLEL
-  cd ..
-  echo "boost Complete." | tee -a ./compile.status >/dev/null
+echo "Boost" | tee -a ./compile.status >/dev/null
+# Boost (needed for PulseView)
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://$SF_MIRROR/project/boost/boost/$VER_BOOST/boost_${VER_BOOST//./_}.tar.bz2
+tar xfj boost_${VER_BOOST//./_}.tar.bz2
+cd boost_${VER_BOOST//./_}
+patch -p0 < ../../boost_wchar.patch
+CC= ./bootstrap.sh --with-toolset=gcc --with-libraries=filesystem,system,serialization,test --without-icu
+echo "using gcc : $NDK_TOOLCHAIN_VERSION : \"${TOOLCHAIN_TRIPLET}-g++\" : <cxxflags>\"$SYSROOT -I$PREFIX/include $CPPFLAGS_STL\" <linkflags>\"$SYSROOT -L$PREFIX/lib $LDFLAGS_STL -lgnustl_shared\" ;" > user-config.jam
+./b2 -q -d+2 --ignore-site-config --user-config=user-config.jam toolset=gcc variant=release link=shared threading=multi runtime-link=shared target-os=android --prefix=$PREFIX --layout=system install $PARALLEL
+cd ..
+echo "boost Complete." | tee -a ./compile.status >/dev/null
 
-  echo "Qt" | tee -a ./compile.status >/dev/null
-  # Qt (needed for PulseView)
-  #
-  #nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
-  #$WGET https://download.qt.io/new_archive/qt/${VER_QT_SHORT}/${VER_QT}/single/qt-everywhere-opensource-src-${VER_QT}.tar.xz
-  tar xfi qt-everywhere-opensource-src-${VER_QT}.tar.xz
-  cd qt-everywhere-opensource-src-${VER_QT}
-  patch -p1 < ../../android-qt.patch
-  CC= CXX= ./configure \
-    --prefix="$PREFIX" \
-    -developer-build \
-    -xplatform android-g++ \
-    -nomake tests \
-    -nomake examples \
-    -android-sdk "$ANDROID_SDK" \
-    -android-ndk "$ANDROID_NDK" \
-    -android-ndk-host "$NDK_HOST" \
-    -android-arch "$TARGET_ARCH" \
-    -android-toolchain-version "$NDK_TOOLCHAIN_VERSION" \
-    -skip qtconnectivity \
-    -skip qtlocation \
-    -skip qtmultimedia \
-    -skip qtscript \
-    -skip qtsensors \
-    -skip qtserialport \
-    -skip qtwebchannel \
-    -skip qtwebsockets \
-    -skip qtxmlpatterns \
-    -opensource -confirm-license -silent -no-warnings-are-errors
-  export ANDROID_API_VERSION=android-$VER_AND_API
-  export ANDROID_BUILD_TOOLS_REVISION=$VER_AND_BT
-  make module-qtbase module-qtandroidextras module-qtsvg module-qtimageformats module-qttranslations $PARALLEL $V
-  make install $V
-  cd ..
-  echo "qt Complete." | tee -a ./compile.status >/dev/null
+echo "Qt" | tee -a ./compile.status >/dev/null
+# Qt (needed for PulseView)
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET https://download.qt.io/new_archive/qt/${VER_QT_SHORT}/${VER_QT}/single/qt-everywhere-opensource-src-${VER_QT}.tar.xz
+tar xfi qt-everywhere-opensource-src-${VER_QT}.tar.xz
+cd qt-everywhere-opensource-src-${VER_QT}
+patch -p1 < ../../android-qt.patch
+CC= CXX= ./configure \
+  --prefix="$PREFIX" \
+  -developer-build \
+  -xplatform android-g++ \
+  -nomake tests \
+  -nomake examples \
+  -android-sdk "$ANDROID_SDK" \
+  -android-ndk "$ANDROID_NDK" \
+  -android-ndk-host "$NDK_HOST" \
+  -android-arch "$TARGET_ARCH" \
+  -android-toolchain-version "$NDK_TOOLCHAIN_VERSION" \
+  -skip qtconnectivity \
+  -skip qtlocation \
+  -skip qtmultimedia \
+  -skip qtscript \
+  -skip qtsensors \
+  -skip qtserialport \
+  -skip qtwebchannel \
+  -skip qtwebsockets \
+  -skip qtxmlpatterns \
+  -opensource -confirm-license -silent -no-warnings-are-errors
+export ANDROID_API_VERSION=android-$VER_AND_API
+export ANDROID_BUILD_TOOLS_REVISION=$VER_AND_BT
+make module-qtbase module-qtandroidextras module-qtsvg module-qtimageformats module-qttranslations $PARALLEL $V
+make install $V
+cd ..
+echo "qt Complete." | tee -a ./compile.status >/dev/null
 
-  #fi
-  #cd build
-  echo "sigrok-androidutils" | tee -a ./compile.status >/dev/null
-  # sigrok-androidutils
-  $GIT_CLONE $REPO_BASE/sigrok-androidutils
-  cd sigrok-androidutils
-  ./autogen.sh
-  ./configure $C --with-android-sdk="${ANDROID_SDK}" --with-android-platform=android-$VER_AND_API
-  
-fi
+echo "sigrok-androidutils" | tee -a ./compile.status >/dev/null
+# sigrok-androidutils
+$GIT_CLONE $REPO_BASE/sigrok-androidutils
+cd sigrok-androidutils
+./autogen.sh
+./configure $C --with-android-sdk="${ANDROID_SDK}" --with-android-platform=android-$VER_AND_API
+
 
 # -----------------------------------------------------------------------------
 export CMAKE_CXX_FLAGS="-std=c++11"
 # -----------------------------------------------------------------------------
-if [ "x$1" = "xrestart" ]; then
-  make $PARALLEL $V
-  make install $V
-  cd ..
-  echo "sigrok-android-utils Complete." | tee -a ./compile.status >/dev/null
+make $PARALLEL $V
+make install $V
+cd ..
+echo "sigrok-android-utils Complete." | tee -a ./compile.status >/dev/null
 
-  # Strip all shared libs to reduce size.
-  find $PREFIX -iname "*.so" -exec ${TOOLCHAIN_TRIPLET}-strip -S {} \;
+# Strip all shared libs to reduce size.
+find $PREFIX -iname "*.so" -exec ${TOOLCHAIN_TRIPLET}-strip -S {} \;
 
-  echo "PulseView" | tee -a ./compile.status >/dev/null
-  # PulseView
-  $GIT_CLONE $REPO_BASE/pulseview
-fi
+echo "PulseView" | tee -a ./compile.status >/dev/null
+# PulseView
+$GIT_CLONE https://github.com/nkruzan/pulseview
 
-cd build/pulseview
+cd pulseview
+git checkout build-android-nov2024
+git pull
 PKG_CONFIG_EXECUTABLE=/usr/bin/pkg-config
 export PKG_CONFIG_EXECUTABLE
 # -----------------------------------------------------------------------------
 
-if [ "x$1" = "xrestart" ]; then
-  patch -p1 < ../../pv_cmake_pkgconfig_fix.patch
-  sed -i -e "s,\t\tandroid:versionName=.*$,\t\tandroid:versionName=\"`date -Iseconds`\"," android/AndroidManifest.xml
-fi
+patch -p1 < ../../pv_cmake_pkgconfig_fix.patch
+sed -i -e "s,\t\tandroid:versionName=.*$,\t\tandroid:versionName=\"`date -Iseconds`\"," android/AndroidManifest.xml
 CXX="$TOOLCHAIN_TRIPLET-clang++ --target=arm-linux-androideabi-4.9 cmake $SYSROOT"
 export CXX
 cmake $CM -DENABLE_TESTS=n .
@@ -645,4 +635,5 @@ cd android
 "${ANDROID_SDK}/tools/android" update project -p . -t android-$VER_AND_API -n PulseView
 ant debug
 cd ../..
+
 echo "PulseView Complete!" | tee -a ./compile.status >/dev/null
