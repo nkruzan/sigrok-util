@@ -79,6 +79,7 @@ VER_NDK=10e
 
 # adjust as necessary
 VER_NDK_ARCH=x86
+#below works to get android ndk and sdk to install, but fails later on
 #VER_NDK_ARCH=x86_64
 
 VER_SDK=24.4.1
@@ -89,6 +90,7 @@ SF_MIRROR=download.sourceforge.net
 
 WGET="wget -c "
 GIT_CLONE="git clone --depth=1"
+#fix for dumb http nt allowing depth
 GIT_CLONE_DUMB_HTTP="git clone"
 
 REPO_BASE="git://sigrok.org"
