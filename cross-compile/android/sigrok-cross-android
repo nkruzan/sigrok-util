@@ -159,6 +159,7 @@ cd Python-$VER_PYTHON
 make python $V
 mv python hostpython
 cd ..
+echo "Python Complete." | tee -a ./compile.status >/dev/null
 
 # -----------------------------------------------------------------------------
 echo "Toolchain" | tee -a ./compile.status >/dev/null
@@ -218,6 +219,7 @@ else
   BINDINGS_CONFIG="--disable-bindings"
 fi
 
+echo "Toolchain Complete." | tee -a ./compile.status >/dev/null
 # -----------------------------------------------------------------------------
 
 echo "config.git" | tee -a ./compile.status >/dev/null
@@ -228,9 +230,10 @@ $GIT_CLONE_DUMB_HTTP https://git.savannah.gnu.org/r/config.git
 $WGET https://raw.githubusercontent.com/arithran/android-cmake/master/toolchain/android.toolchain.cmake
 patch < ../android.toolchain.cmake.patch android.toolchain.cmake
 
+echo "config.git Complete." | tee -a ./compile.status >/dev/null
 # -----------------------------------------------------------------------------
 
-echo "Python" | tee -a ./compile.status >/dev/null
+echo "Patching Python" | tee -a ./compile.status >/dev/null
 # Python (needed for libsigrokdecode)
 # Don't do parallel Python builds, this doesn't seem to work well.
 cd Python-$VER_PYTHON
@@ -246,6 +249,8 @@ sed -i "s/^#include <sys\/soundcard.h/#include <linux\/soundcard.h/g" Modules/os
 sed -i "s/^#include \"mpdecimal.h\"/#include \"libmpdec\/mpdecimal.h\"/g" Modules/_decimal/_decimal.c 
 make PYTHON_FOR_BUILD='_PYTHON_HOST_PLATFORM=linux-arm ./hostpython' install $V
 cd ..
+
+echo "Patching Python Complete." | tee -a ./compile.status >/dev/null
 
 echo "libiconv" | tee -a ./compile.status >/dev/null
 # libiconv (needed for glib)
@@ -270,6 +275,7 @@ cd ..
 test -d $PREFIX/include || mkdir $PREFIX/include
 cp include/iconv.h.inst $PREFIX/include/iconv.h
 cd ..
+echo "libiconv Complete." | tee -a ./compile.status >/dev/null
 
 echo "gettext" | tee -a ./compile.status >/dev/null
 # gettext (needed for glib)
@@ -284,6 +290,8 @@ make $PARALLEL $V
 make install $V
 cd ../..
 
+echo "gettext Complete." | tee -a ./compile.status >/dev/null
+
 echo "zlib" | tee -a ./compile.status >/dev/null
 # zlib (needed for glib and libzip)
 $WGET http://zlib.net/zlib-$VER_ZLIB.tar.gz
@@ -294,6 +302,8 @@ CC="$TOOLCHAIN_TRIPLET-gcc $SYSROOT" ./configure --prefix=$PREFIX
 make $PARALLEL $V
 make install $V
 cd ..
+
+echo "zlib Complete." | tee -a ./compile.status >/dev/null
 
 echo "pcre" | tee -a ./compile.status >/dev/null
 # pcre (needed for glib)
@@ -309,6 +319,9 @@ make $PARALLEL $V
 make install $V
 cd ..
 
+
+echo "pcre Complete." | tee -a ./compile.status >/dev/null
+
 echo "libffi" | tee -a ./compile.status >/dev/null
 # libffi (needed for glib)
 #
@@ -320,6 +333,9 @@ cd libffi-$VER_LIBFFI
 make $PARALLEL $V
 make install $V
 cd ..
+
+
+echo "libffi Complete." | tee -a ./compile.status >/dev/null
 
 echo "glib" | tee -a ./compile.status >/dev/null
 # glib (needed for libsigrok)
@@ -335,6 +351,9 @@ make $PARALLEL $V
 make install $V
 cd ..
 
+echo "glib Complete." | tee -a ./compile.status >/dev/null
+
+
 echo "libzip" | tee -a ./compile.status >/dev/null
 # libzip (needed for libsigrok)
 #
@@ -349,6 +368,9 @@ make $PARALLEL $V
 make install $V
 cd ..
 
+
+echo "libzip Complete." | tee -a ./compile.status >/dev/null
+
 echo "libusb" | tee -a ./compile.status >/dev/null
 # libusb-1.0 (needed for libsigrok)
 #
@@ -362,6 +384,9 @@ make $PARALLEL $V
 make install $V
 cd ..
 
+echo "libusb Complete." | tee -a ./compile.status >/dev/null
+
+
 echo "libftdi1" | tee -a ./compile.status >/dev/null
 # libftdi1 (needed for libsigrok)
 #
@@ -374,6 +399,9 @@ make $PARALLEL $V
 make install $V
 cd ..
 
+echo "libftdi1 Complete." | tee -a ./compile.status >/dev/null
+
+
 echo "libserialport" | tee -a ./compile.status >/dev/null
 # libserialport
 $GIT_CLONE $REPO_BASE/libserialport
@@ -385,6 +413,9 @@ cd build
 make $PARALLEL $V
 make install $V
 cd ../..
+
+
+echo "libserialport Complete." | tee -a ./compile.status >/dev/null
 
 # Build dependencies for libsigrok bindings if needed
 
@@ -402,6 +433,8 @@ if [ x"$CPPFLAGS_STL" != x ]; then
   make install $V
   cd ..
 
+  echo "libsigc++ Complete." | tee -a ./compile.status >/dev/null
+
   echo "glibmm" | tee -a ./compile.status >/dev/null
   # glibmm (needed for libsigrok bindings)
   $WGET http://ftp.gnome.org/pub/gnome/sources/glibmm/$VER_GLIBMM_SHORT/glibmm-$VER_GLIBMM.tar.xz
@@ -411,7 +444,7 @@ if [ x"$CPPFLAGS_STL" != x ]; then
   make $PARALLEL $V
   make install $V
   cd ..
-
+  echo "glibmm Complete." | tee -a ./compile.status >/dev/null
 fi
 
 echo "libsigrok" | tee -a ./compile.status >/dev/null
@@ -427,6 +460,9 @@ make $PARALLEL $V
 make datadir='$(datarootdir)' install $V
 cd ../..
 
+echo "libsigrok Complete." | tee -a ./compile.status >/dev/null
+
+
 echo "libsigrokdecode" | tee -a ./compile.status >/dev/null
 # libsigrokdecode
 $GIT_CLONE $REPO_BASE/libsigrokdecode
@@ -438,6 +474,7 @@ cd build
 make $PARALLEL $V
 make install $V
 cd ../..
+echo "libsigrokdecode Complete." | tee -a ./compile.status >/dev/null
 
 echo "sigrok-firmware" | tee -a ./compile.status >/dev/null
 # sigrok-firmware
@@ -451,6 +488,8 @@ make $PARALLEL $V
 make install $V
 cd ../..
 
+echo "sigrok-firmware Complete." | tee -a ./compile.status >/dev/null
+
 echo "sigrok-firmware-fx2lafw" | tee -a ./compile.status >/dev/null
 # sigrok-firmware-fx2lafw
 #
@@ -460,6 +499,7 @@ tar xfz sigrok-firmware-fx2lafw-bin-$VER_SIGROK_FIRMWARE_FX2LAFW.tar.gz
 cd sigrok-firmware-fx2lafw-bin-$VER_SIGROK_FIRMWARE_FX2LAFW
 cp *.fw $PREFIX/share/sigrok-firmware/
 cd ..
+echo "sigrok-firmware-fx2lafw Complete." | tee -a ./compile.status >/dev/null
 
 echo "sigrok-cli" | tee -a ./compile.status >/dev/null
 # sigrok-cli
@@ -472,6 +512,7 @@ cd build
 make $PARALLEL $V
 make install $V
 cd ../..
+echo "sigrok-cli Complete." | tee -a ./compile.status >/dev/null
 
 # Check if we have all requirements to build PulseView:
 
@@ -507,6 +548,7 @@ CC= ./bootstrap.sh --with-toolset=gcc --with-libraries=filesystem,system,seriali
 echo "using gcc : $NDK_TOOLCHAIN_VERSION : \"${TOOLCHAIN_TRIPLET}-g++\" : <cxxflags>\"$SYSROOT -I$PREFIX/include $CPPFLAGS_STL\" <linkflags>\"$SYSROOT -L$PREFIX/lib $LDFLAGS_STL -lgnustl_shared\" ;" > user-config.jam
 ./b2 -q -d+2 --ignore-site-config --user-config=user-config.jam toolset=gcc variant=release link=shared threading=multi runtime-link=shared target-os=android --prefix=$PREFIX --layout=system install $PARALLEL
 cd ..
+echo "boost Complete." | tee -a ./compile.status >/dev/null
 
 echo "Qt" | tee -a ./compile.status >/dev/null
 # Qt (needed for PulseView)
@@ -540,6 +582,7 @@ export ANDROID_BUILD_TOOLS_REVISION=$VER_AND_BT
 make module-qtbase module-qtandroidextras module-qtsvg module-qtimageformats module-qttranslations $PARALLEL $V
 make install $V
 cd ..
+echo "qt Complete." | tee -a ./compile.status >/dev/null
 
 #fi
 #cd build
@@ -553,6 +596,7 @@ export CMAKE_CXX_FLAGS="-std=c++11"
 make $PARALLEL $V
 make install $V
 cd ..
+echo "sigrok-android-utils Complete." | tee -a ./compile.status >/dev/null
 
 # Strip all shared libs to reduce size.
 find $PREFIX -iname "*.so" -exec ${TOOLCHAIN_TRIPLET}-strip -S {} \;
@@ -570,4 +614,4 @@ cd android
 "${ANDROID_SDK}/tools/android" update project -p . -t android-$VER_AND_API -n PulseView
 ant debug
 cd ../..
-echo "Complete!" | tee -a ./compile.status >/dev/null
+echo "PulseView Complete!" | tee -a ./compile.status >/dev/null
