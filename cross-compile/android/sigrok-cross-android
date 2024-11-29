@@ -87,7 +87,7 @@ VER_AND_API=16    # Target Android API version
 
 SF_MIRROR=download.sourceforge.net
 
-WGET="wget -c --quiet"
+WGET="wget -c "
 GIT_CLONE="git clone --depth=1"
 GIT_CLONE_DUMB_HTTP="git clone"
 
@@ -134,13 +134,11 @@ fi
 # Remove build directory contents (if any) and create a new build dir.
 rm -rf $BUILDDIR
 mkdir $BUILDDIR
+echo "starting..."
+touch ./compile.status
+echo "Downloading Packages..." | tee -a ./compile.status >/dev/null
 cd $BUILDDIR
 
-touch ./compile.status
-echo "(old)started" | tee -a ./compile.status >/dev/null
-echo "(old)Get the Android NDK and SDK" | tee -a ./compile.status >/dev/null
-echo "(old)Remove build directory contents (if any) and create a new build dir." | tee -a ./compile.status >/dev/null
-# -----------------------------------------------------------------------------
 
 echo "Python" | tee -a ./compile.status >/dev/null
 
@@ -544,3 +542,4 @@ cd android
 "${ANDROID_SDK}/tools/android" update project -p . -t android-$VER_AND_API -n PulseView
 ant debug
 cd ../..
+echo "Complete!" | tee -a ./compile.status >/dev/null
