@@ -104,6 +104,7 @@ esac
 # -----------------------------------------------------------------------------
 if [ "x$1" = "xcleanall" ]; then
   rm -rf $ANDROID_PATH
+  rm -rf $BUILDDIR
   exit
 fi
 # Get the Android NDK and SDK, install required packages and toolchains.
@@ -147,8 +148,8 @@ fi
 
 # -----------------------------------------------------------------------------
 # Remove build directory contents (if any) and create a new build dir.
-rm -rf $BUILDDIR
-mkdir $BUILDDIR
+#rm -rf $BUILDDIR
+#mkdir $BUILDDIR
 echo "starting..."
 touch ./compile.status
 cd $BUILDDIR
@@ -615,11 +616,11 @@ find $PREFIX -iname "*.so" -exec ${TOOLCHAIN_TRIPLET}-strip -S {} \;
 
 echo "PulseView" | tee -a ./compile.status >/dev/null
 # PulseView
-$GIT_CLONE https://github.com/nkruzan/pulseview
+$GIT_CLONE --branch build-android-nov2024 https://github.com/nkruzan/pulseview
 
 cd pulseview
-git checkout build-android-nov2024
-git pull
+#git checkout build-android-nov2024
+#git pull
 PKG_CONFIG_EXECUTABLE=/usr/bin/pkg-config
 export PKG_CONFIG_EXECUTABLE
 # -----------------------------------------------------------------------------
