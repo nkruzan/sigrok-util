@@ -137,14 +137,19 @@ mkdir $BUILDDIR
 echo "starting..."
 touch ./compile.status
 echo "Downloading Packages..." | tee -a ./compile.status >/dev/null
+git clone https://github.com/nkruzan/pulseview-android-required-packages build
 cd $BUILDDIR
 
 
+echo "Building Packages..." | tee -a ./compile.status >/dev/null
 echo "Python" | tee -a ./compile.status >/dev/null
 
 # Build host Python before we start messing with the environment.
 # Don't do parallel builds, this doesn't seem to work well.
-$WGET http://python.org/ftp/python/$VER_PYTHON/Python-$VER_PYTHON.tar.xz
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://python.org/ftp/python/$VER_PYTHON/Python-$VER_PYTHON.tar.xz
+
 tar xfJ Python-$VER_PYTHON.tar.xz
 cd Python-$VER_PYTHON
 ./configure
@@ -241,7 +246,9 @@ cd ..
 
 echo "libiconv" | tee -a ./compile.status >/dev/null
 # libiconv (needed for glib)
-$WGET http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$VER_LIBICONV.tar.gz
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://ftp.gnu.org/pub/gnu/libiconv/libiconv-$VER_LIBICONV.tar.gz
 tar xfz libiconv-$VER_LIBICONV.tar.gz
 cd libiconv-$VER_LIBICONV
 cp -f ../config/config.guess build-aux
@@ -263,7 +270,9 @@ cd ..
 
 echo "gettext" | tee -a ./compile.status >/dev/null
 # gettext (needed for glib)
-$WGET http://ftp.gnu.org/pub/gnu/gettext/gettext-$VER_GETTEXT.tar.gz
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://ftp.gnu.org/pub/gnu/gettext/gettext-$VER_GETTEXT.tar.gz
 tar xfz gettext-$VER_GETTEXT.tar.gz
 cd gettext-$VER_GETTEXT
 ./configure $C --enable-shared --disable-libasprintf
@@ -286,7 +295,9 @@ cd ..
 echo "pcre" | tee -a ./compile.status >/dev/null
 # pcre (needed for glib)
 #$WGET https://ftp.pcre.org/pub/pcre/pcre-$VER_PCRE.tar.gz
-$WGET https://github.com/nkruzan/pcre-v8.38/raw/a7e7105d9505f8efb46e2e155f7bd7301cebc315/pcre-8.38.tar.gz
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET https://github.com/nkruzan/pcre-v8.38/raw/a7e7105d9505f8efb46e2e155f7bd7301cebc315/pcre-8.38.tar.gz
 
 tar xfz pcre-$VER_PCRE.tar.gz
 cd pcre-$VER_PCRE
@@ -297,7 +308,9 @@ cd ..
 
 echo "libffi" | tee -a ./compile.status >/dev/null
 # libffi (needed for glib)
-$WGET ftp://sourceware.org/pub/libffi/libffi-$VER_LIBFFI.tar.gz
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET ftp://sourceware.org/pub/libffi/libffi-$VER_LIBFFI.tar.gz
 tar xfz libffi-$VER_LIBFFI.tar.gz
 cd libffi-$VER_LIBFFI
 ./configure $C
@@ -307,7 +320,9 @@ cd ..
 
 echo "glib" | tee -a ./compile.status >/dev/null
 # glib (needed for libsigrok)
-$WGET http://ftp.gnome.org/pub/gnome/sources/glib/$VER_GLIB_SHORT/glib-$VER_GLIB.tar.xz
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://ftp.gnome.org/pub/gnome/sources/glib/$VER_GLIB_SHORT/glib-$VER_GLIB.tar.xz
 tar xfJ glib-$VER_GLIB.tar.xz
 cd glib-$VER_GLIB
 NOCONFIGURE=yes ./autogen.sh
@@ -319,7 +334,9 @@ cd ..
 
 echo "libzip" | tee -a ./compile.status >/dev/null
 # libzip (needed for libsigrok)
-$WGET http://www.nih.at/libzip/libzip-$VER_LIBZIP.tar.gz
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://www.nih.at/libzip/libzip-$VER_LIBZIP.tar.gz
 tar xfz libzip-$VER_LIBZIP.tar.gz
 cd libzip-$VER_LIBZIP
 cp -f ../config/config.guess .
@@ -331,7 +348,9 @@ cd ..
 
 echo "libusb" | tee -a ./compile.status >/dev/null
 # libusb-1.0 (needed for libsigrok)
-$WGET http://$SF_MIRROR/project/libusb/libusb-1.0/libusb-$VER_LIBUSB/libusb-$VER_LIBUSB.tar.bz2
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://$SF_MIRROR/project/libusb/libusb-1.0/libusb-$VER_LIBUSB/libusb-$VER_LIBUSB.tar.bz2
 tar xfj libusb-$VER_LIBUSB.tar.bz2
 cd libusb-$VER_LIBUSB
 patch -p1 < ../../libusb-1.0.patch
@@ -342,7 +361,9 @@ cd ..
 
 echo "libftdi1" | tee -a ./compile.status >/dev/null
 # libftdi1 (needed for libsigrok)
-$WGET http://www.intra2net.com/en/developer/libftdi/download/libftdi1-$VER_LIBFTDI1.tar.bz2
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://www.intra2net.com/en/developer/libftdi/download/libftdi1-$VER_LIBFTDI1.tar.bz2
 tar xfj libftdi1-$VER_LIBFTDI1.tar.bz2
 cd libftdi1-$VER_LIBFTDI1
 cmake $CM -DFTDIPP=no -DDOCUMENTATION=no -DEXAMPLES=no -DFTDI_EEPROM=no -DPYTHON_BINDINGS=no -DBUILD_TESTS=n .
@@ -429,7 +450,9 @@ cd ../..
 
 echo "sigrok-firmware-fx2lafw" | tee -a ./compile.status >/dev/null
 # sigrok-firmware-fx2lafw
-$WGET http://sigrok.org/download/binary/sigrok-firmware-fx2lafw/sigrok-firmware-fx2lafw-bin-$VER_SIGROK_FIRMWARE_FX2LAFW.tar.gz
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://sigrok.org/download/binary/sigrok-firmware-fx2lafw/sigrok-firmware-fx2lafw-bin-$VER_SIGROK_FIRMWARE_FX2LAFW.tar.gz
 tar xfz sigrok-firmware-fx2lafw-bin-$VER_SIGROK_FIRMWARE_FX2LAFW.tar.gz
 cd sigrok-firmware-fx2lafw-bin-$VER_SIGROK_FIRMWARE_FX2LAFW
 cp *.fw $PREFIX/share/sigrok-firmware/
@@ -471,7 +494,9 @@ NDK_HOST=`"$ANDROID_NDK/ndk-build" -p 2>/dev/null | awk '$1 == "HOST_TAG" { prin
 
 echo "Boost" | tee -a ./compile.status >/dev/null
 # Boost (needed for PulseView)
-$WGET http://$SF_MIRROR/project/boost/boost/$VER_BOOST/boost_${VER_BOOST//./_}.tar.bz2
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET http://$SF_MIRROR/project/boost/boost/$VER_BOOST/boost_${VER_BOOST//./_}.tar.bz2
 tar xfj boost_${VER_BOOST//./_}.tar.bz2
 cd boost_${VER_BOOST//./_}
 patch -p0 < ../../boost_wchar.patch
