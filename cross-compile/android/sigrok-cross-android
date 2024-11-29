@@ -236,9 +236,10 @@ echo "config.git" | tee -a ./compile.status >/dev/null
 $GIT_CLONE_DUMB_HTTP https://git.savannah.gnu.org/r/config.git
 
 # Get a toolchain for cmake that knows about Android.
-$WGET https://raw.githubusercontent.com/arithran/android-cmake/master/toolchain/android.toolchain.cmake
-patch < ../android.toolchain.cmake.patch android.toolchain.cmake
-
+#$WGET https://raw.githubusercontent.com/arithran/android-cmake/master/toolchain/android.toolchain.cmake
+#patch < ../android.toolchain.cmake.patch android.toolchain.cmake
+rm -f android.toolchain.cmake
+cp ../android.toolchain.cmake.works android.toolchain.cmake
 echo "config.git Complete." | tee -a ./compile.status >/dev/null
 # -----------------------------------------------------------------------------
 
