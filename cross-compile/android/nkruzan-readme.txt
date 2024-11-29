@@ -7,6 +7,7 @@ cd sigrok-util
 git checkout build-nov2024
 cd cross-compile/android
 ./sigrok-cross-android prepare
+./sigrok-cross-android buildall
 ./sigrok-cross-android 
 
 pulseview 
