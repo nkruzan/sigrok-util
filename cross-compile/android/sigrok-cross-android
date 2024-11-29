@@ -555,7 +555,9 @@ echo "boost Complete." | tee -a ./compile.status >/dev/null
 
 echo "Qt" | tee -a ./compile.status >/dev/null
 # Qt (needed for PulseView)
-$WGET https://download.qt.io/new_archive/qt/${VER_QT_SHORT}/${VER_QT}/single/qt-everywhere-opensource-src-${VER_QT}.tar.xz
+#
+#nkruzan: pulls from git clone https://github.com/nkruzan/pulseview-android-required-packages build
+#$WGET https://download.qt.io/new_archive/qt/${VER_QT_SHORT}/${VER_QT}/single/qt-everywhere-opensource-src-${VER_QT}.tar.xz
 tar xfi qt-everywhere-opensource-src-${VER_QT}.tar.xz
 cd qt-everywhere-opensource-src-${VER_QT}
 patch -p1 < ../../android-qt.patch
